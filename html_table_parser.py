@@ -20,13 +20,13 @@ def parse_tables(path: str, is_join_cells: bool = False) -> iter:
     :returns:   table as list
     :rtype:     iter
     """
-    def join_row_(cells: list):
+    def join_cells_(cells: list):
         return ''.join(cells)
 
-    join_row = join_row_ if is_join_cells else lambda x: x
+    join_cells = join_cells_ if is_join_cells else lambda x: x
 
-    with open(path, "r") as translation:
-        soup = BeautifulSoup(translation, features='lxml')
+    with open(path, "r") as file:
+        soup = BeautifulSoup(file, features='lxml')
         tables = soup.find_all('table')
 
         for t in tables:
@@ -39,7 +39,7 @@ def parse_tables(path: str, is_join_cells: bool = False) -> iter:
                     # empty cells generate \xA0 symbol - replace it with space
                     text = c.p.get_text().replace('В\xa0', ' ')
                     clist += text
-                rlist += join_row(clist)
+                rlist.append(join_cells(clist))
             yield rlist
 
 
@@ -58,14 +58,14 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-j',
-        '--joinrow',
-        help='join row to produce string',
+        '--joincells',
+        help='join cells of a row to produce string',
         action='store_true',
         default=False,
-        dest='is_join_row')
+        dest='is_join_cells')
 
     args = parser.parse_args()
 
     pp = pprint.PrettyPrinter(indent=4)
-    for t in parse_tables(args.path, args.is_join_row):
+    for t in parse_tables(args.path, args.is_join_cells):
         pp.pprint(t)
